@@ -1,10 +1,11 @@
 import mysql from "mysql2"
 
-export async function queryMysql(database, sql) {
+export async function queryMysql(host, database, sql) {
   const connection = mysql.createConnection({
-    host: "localhost",
+    host,
     user: "root",
     password: "password",
+    // password: "test",
     database,
   })
 

@@ -1,5 +1,10 @@
 import { queryMysql } from "../mysql/index.js"
-import { toMysqlDT } from "./utilities.js"
+import {
+  toMysqlDT,
+  getDatabaseByIpNum,
+  getTable,
+  getHostByIpNum
+} from "./utilities.js"
 
 export async function alert_alerts(query) {
   const total = await totalAlertsPage(query)
@@ -31,7 +36,7 @@ async function totalAlertsPage({
   if (altState != "已处理" && altState != "全部") {
     return null
   }
-  wtId = wtId == null ? 6 : wtId
+  wtId = wtId == null ? 20 : wtId
   ipNum =
     ipNum == null || ipNum == "全部"
       ? "MPV-WC00-RD1"
@@ -60,7 +65,7 @@ async function alerts({
   if (altState != "已处理" && altState != "全部") {
     return []
   }
-  wtId = wtId == null ? 6 : wtId
+  wtId = wtId == null ? 20 : wtId
   ipNum =
     ipNum == null || ipNum == "全部"
       ? "MPV-WC00-RD1"
@@ -82,8 +87,8 @@ async function alerts({
     const valName =
       type == "vib" ? "加速度有效值" : "倾斜角"
     const valTypeZh = valName
-    const bpLow = 10
-    const bpHigh = 1000
+    const bpLow = 0
+    const bpHigh = 100
     const thhValue1 = 100
     const thhValue2 = 200
     const mlfJdgName = null
@@ -125,7 +130,7 @@ async function alerts({
 }
 
 export async function alert_latest({ wtId, ipNum }) {
-  wtId = wtId == null ? 6 : wtId
+  wtId = wtId == null ? 20 : wtId
   ipNum = ipNum == null ? "MPV-WC00-RD1" : ipNum
   const sqlResult = (
     await alertLastestQuery({ wtId, ipNum })
@@ -136,8 +141,8 @@ export async function alert_latest({ wtId, ipNum }) {
   const valId = `${wtId}_${ipNum}_${type}_${sqlResult.id}_${sqlResult.saveTime}`
   const valName = type == "vib" ? "加速度有效值" : "倾斜角"
   const valTypeZh = valName
-  const bpLow = 10
-  const bpHigh = 1000
+  const bpLow = 0
+  const bpHigh = 100
   const thhValue1 = 100
   const thhValue2 = 200
   const mlfJdgName = null
@@ -182,6 +187,7 @@ function alertLastestQuery({ wtId, ipNum }) {
   const id = getIdByIpNum(ipNum)
   const type = getTypeByIpNum(ipNum)
   const database = getDatabaseByIpNum(ipNum)
+  const host = getHostByIpNum(ipNum)
   const waveFeatureName =
     type == "inclin" ? "inc_wave_byte" : "vib_wave"
 
@@ -193,7 +199,8 @@ function alertLastestQuery({ wtId, ipNum }) {
     order by saveTime desc
     limit 1;
   `
-  return queryMysql(database, sql)
+
+  return queryMysql(host, database, sql)
 }
 
 function alertsQuery({ wtId, ipNum, dtFrom, dtTo, page }) {
@@ -201,6 +208,7 @@ function alertsQuery({ wtId, ipNum, dtFrom, dtTo, page }) {
   const id = getIdByIpNum(ipNum)
   const type = getTypeByIpNum(ipNum)
   const database = getDatabaseByIpNum(ipNum)
+  const host = getHostByIpNum(ipNum)
   const waveFeatureName =
     type == "inclin" ? "inc_wave_byte" : "vib_wave"
 
@@ -225,7 +233,7 @@ function alertsQuery({ wtId, ipNum, dtFrom, dtTo, page }) {
 
   sql = `${sql}
     limit 5 offset ${(page - 1) * 5}`
-  return queryMysql(database, sql)
+  return queryMysql(host, database, sql)
 }
 
 function alertsCountQuery({ wtId, ipNum, dtFrom, dtTo }) {
@@ -233,6 +241,7 @@ function alertsCountQuery({ wtId, ipNum, dtFrom, dtTo }) {
   const id = getIdByIpNum(ipNum)
   const type = getTypeByIpNum(ipNum)
   const database = getDatabaseByIpNum(ipNum)
+  const host = getHostByIpNum(ipNum)
   const waveFeatureName =
     type == "inclin" ? "inc_wave_byte" : "vib_wave"
 
@@ -251,16 +260,10 @@ function alertsCountQuery({ wtId, ipNum, dtFrom, dtTo }) {
     sql = `${sql}
       and saveTime <= '${toMysqlDT(dtTo)}'`
   }
-  return queryMysql(database, sql)
+  return queryMysql(host, database, sql)
 }
 
-function getMachineIdByWtId(wtId) {
-  const machine_ids = {
-    [6]: "20033012333750951",
-    [20]: "20033111035375456",
-  }
-  return machine_ids[wtId]
-}
+
 
 function getTypeByIpNum(ipNum) {
   switch (ipNum) {
@@ -273,15 +276,7 @@ function getTypeByIpNum(ipNum) {
   }
 }
 
-function getDatabaseByIpNum(ipNum) {
-  switch (ipNum) {
-    case "MPA-TB00-000":
-    case "MPA-TT00-000":
-    case "MPV-WC00-RD1":
-    case "MPV-WC00-AD1":
-      return "jk_tt_dau6000_1_2014"
-  }
-}
+
 
 function getIdByIpNum(ipNum) {
   switch (ipNum) {
@@ -293,14 +288,25 @@ function getIdByIpNum(ipNum) {
       return 0
     case "MPV-WC00-AD1":
       return 1
+    case "MPV-MB01-RD1":
+      return 0
+    case "MPV-WB01-BR0":
+      return 4
+    case "MPV-WB02-BR0":
+      return 7
+    case "MPV-WB03-BR0":
+      return 8
+    case "MPV-PB01-RD0":
+      return 10
+    case "MPV-PB02-RD0":
+      return 11
+    case "MPV-PB03-RD0":
+      return 12
+    case "MPV-YB00-RD1":
+      return 13
   }
 }
 
-function getTable(wtId, ipNum) {
-  const machine_id = getMachineIdByWtId(wtId)
-  const type = getTypeByIpNum(ipNum)
-  return `d_${machine_id}_${type}`
-}
 
 function getIpNameByIpNum(ipNum) {
   switch (ipNum) {
@@ -312,5 +318,21 @@ function getIpNameByIpNum(ipNum) {
       return "机舱径向水平测点"
     case "MPV-WC00-AD1":
       return "机舱轴向水平测点"
+    case "MPV-MB01-RD1":
+      return "前主轴承径向水平测点"
+    case "MPV-WB01-BR0":
+      return "叶片1"
+    case "MPV-WB02-BR0":
+      return "叶片2"
+    case "MPV-WB03-BR0":
+      return "叶片3"
+    case "MPV-PB01-RD0":
+      return "变桨轴承1径向测点"
+    case "MPV-PB02-RD0":
+      return "变桨轴承2径向测点"
+    case "MPV-PB03-RD0":
+      return "变桨轴承3径向测点"
+    case "MPV-YB00-RD1":
+      return "偏航轴承径向测点"
   }
 }
