@@ -3,7 +3,8 @@ import {
   toMysqlDT,
   getDatabaseByIpNum,
   getTable,
-  getHostByIpNum
+  getHostByIpNum,
+  getTypeByIpNum
 } from "./utilities.js"
 
 export async function alert_alerts(query) {
@@ -262,21 +263,6 @@ function alertsCountQuery({ wtId, ipNum, dtFrom, dtTo }) {
   }
   return queryMysql(host, database, sql)
 }
-
-
-
-function getTypeByIpNum(ipNum) {
-  switch (ipNum) {
-    case "MPA-TB00-000":
-    case "MPA-TT00-000":
-      return "inclin"
-    case "MPV-WC00-RD1":
-    case "MPV-WC00-AD1":
-      return "vib"
-  }
-}
-
-
 
 function getIdByIpNum(ipNum) {
   switch (ipNum) {

@@ -42,6 +42,7 @@ export function getDatabaseByIpNum(ipNum) {
     case "MPV-WC00-RD1":
     case "MPV-WC00-AD1":
       return "jk_tt_dau6000_1_2014"
+      // return "dau6000_1_2014"
     case "MPV-MB01-RD1":
     case "MPV-WB01-BR0":
     case "MPV-WB02-BR0":
@@ -51,8 +52,10 @@ export function getDatabaseByIpNum(ipNum) {
     case "MPV-PB03-RD0":
     case "MPV-YB00-RD1":
       return "jk_yp_dau6000_1_2014"
+      // return "dau6000_1_2014"
   }
   return "jk_tt_dau6000_1_2014"
+  // return "dau6000_1_2014"
 }
 
 function getMachineIdByWtId(wtId, ipNum) {
@@ -100,6 +103,7 @@ export function getHostByIpNum(ipNum) {
     case "MPV-WC00-RD1":
     case "MPV-WC00-AD1":
       return "localhost"
+      // return "11.100.0.20"
     case "MPV-MB01-RD1":
     case "MPV-WB01-BR0":
     case "MPV-WB02-BR0":
@@ -111,9 +115,10 @@ export function getHostByIpNum(ipNum) {
       return "localhost"
   }
   return "localhost"
+  // return "11.100.0.22"
 }
 
-function getTypeByIpNum(ipNum) {
+export function getTypeByIpNum(ipNum) {
   switch (ipNum) {
     case "MPA-TB00-000":
     case "MPA-TT00-000":
